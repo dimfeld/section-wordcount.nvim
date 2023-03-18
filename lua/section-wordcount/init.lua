@@ -118,17 +118,8 @@ local function update_wordcounts(data, start_line, end_line)
     if wordcount ~= region.wordcount then
       region.wordcount = wordcount
       region.virt_text = string.format("%d Words", wordcount)
-
-      -- Need to explicitly update here since the line may not redraw
-      needs_redraw = true
-
       -- vim.pretty_print('update', region)
     end
-
-    -- if needs_redraw then
-    --   api.nvim_buf_clear_namespace(data.bufnr, ns_id, region_line - 1, region_line)
-    --   set_marker(data, region_line - 1, region.virt_text)
-    -- end
   end
 
 end
@@ -262,7 +253,7 @@ end
 
 M.setup = function(options)
   option = options or {}
-  highlight = option.highlight or "String"
+  highlight = api.nvim_get_hl_id_by_name(option.highlight or "String")
   virt_text_pos = option.virt_text_pos or "eol"
   ns_id = api.nvim_create_namespace("section-wordcount")
 
@@ -278,6 +269,8 @@ M.setup = function(options)
         if region then
           api.nvim_buf_set_extmark(bufnr, ns_id, line, 0, {
             ephemeral = true,
+            -- Allow other virtual text to show above this.
+            priority = 0,
             virt_text_pos = virt_text_pos,
             virt_text = { { region.virt_text, highlight } }
           })
